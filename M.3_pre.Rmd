@@ -1,0 +1,619 @@
+---
+title: "<span style='font-size: 27px'>**Module M.3** Visualizing data with ggplot2" 
+author:
+  - name: "Raisa Hern&#225;ndez-Pacheco, Alexandra L. Bland"
+    affiliation: Introduction to Primate Data Exploration and Linear Modeling with R
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 800px;
+}
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+/* Whole document: */
+body{
+  font-family: helvetica;
+  font-size: 12pt;
+}
+code {white-space:pre !important; overflow-x:scroll !important;font-size:12pt; font-family:courier;}
+
+</style>
+
+
+<br><br>
+<style>
+body {
+text-align: justify}
+div.blue { background-color: rgb(203,228,249); border-radius: 5px; padding: 20px;max-width: 800px; vertical-align: middle}
+</style>
+<div class = "blue"> 
+
+
+<span style='color:rgb(102,20,0); font-size:120%; font-weight:600'> Introduction: </span> *Data visualizations* are one of the best tools scientists have to communicate their findings. Good data visualizations show the trends and relationships between variables of interest in a clear, unbiased, and easy-to-interpret way. The **R** programming language offers multiple ways to carry out high-quality figures, and its package *ggplot2* is a common tool to generate data visualizations.  
+
+In this module, you will expand your skills on data exploration through the generation of publication-quality figures while learning to plot data of the distribution of age at delivery in Cayo Santiago female rhesus macaques. 
+
+</div>
+
+***
+
+<br>
+
+**Upon completion of this module, you will be able to:**
+
+  + Generate publication-quality figures;
+  + Arrange figures into panels;
+  + Export figures as .pdf files.
+
+<br>
+
+**References:**
+
+  + [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html)
+  + [gridExtra](https://cran.r-project.org/web/packages/gridExtra/index.html)
+  + [RStudio](https://posit.co/products/open-source/rstudio/)
+  + [rstatix](https://cran.r-project.org/web/packages/rstatix/index.html)
+  + [Tidyverse R packages for data science](https://www.tidyverse.org)
+  
+<br>
+
+**Extra training:**
+
+  + [Cookbook for R]( http://www.cookbook-r.com/Graphs/)
+  + [Data Carpentry - Data Analysis and Visualization in R for Ecologists](https://datacarpentry.org/R-ecology-lesson/index.html)
+
+<br>
+
+**Associated literature:**
+
+  + [Hernández-Pacheco et al. 2016. Discovery of a secular trend in Cayo Santiago macaque reproduction](https://onlinelibrary.wiley.com/doi/abs/10.1002/ajp.22502)
+  
+<br>
+
+<details>
+  <summary><span style='color:"black"; font-size:100%; font-weight:550'> **Expand for R Notation and functions index** </span></summary>
+
+<p>
+
+**Notation:**
+
+ + **$** for accessing or creating a variable in a dataset.
+
+**Functions:**
+
+  + Base R:
+  
+    + **ifelse()** for creating conditional variables;
+    + **install.packages()** for installing packages;
+    + **is.na()** for checking whether a row within a column is empty (NA);
+    + **library()** for loading packages;
+    + **str()** and **class()** for data structure.
+
+<p>
+
+  + ggplot2:
+  
+    + **annotate()** for annotating the plot;
+    + **facet_grid()** for facetting;
+    + **geom_ ()** functions for the plot type;
+    + **scale_y_continuous** for customizing a continuous *y*-axis;
+    + **scale_x_continuous** for customizing a continuous *x*-axis;
+    + **theme()** for customizing the non-data components of the plot.
+
+<p>
+
+  + gridExtra:
+  
+    + **grid.arrange()** for arranging multiple plots on a page (panels).
+
+<p>
+
+  + rstatix:
+  
+    + **get_summary_stats()** for summarizing a continuous variable.
+
+<p>
+
+  + tidyverse:
+  
+    + **filter()** for subsets by rows;
+    + **group_by()** for grouping variables;
+    + **%>%** for combining multiple commands.
+
+</details>
+
+<br>
+
+***
+
+<br>
+
+<div align="center"> 
+### Exploring the distribution of age at delivery in rhesus macaques
+</div>
+
+<br>
+
+Cayo Santiago rhesus macaques show reproductive synchrony with >72% of births occuring within a 3-month period every year. This is common in primate populations where females live in groups because they share the same space and are exposed to the same reproduction-triggering cue simultaneously. Originally, the reproductive synchrony of Cayo Santiago females was thought to be triggered by spring rainfall. However, there is now evidence of an ongoing shift in the onset of births advancing in time through the four different calendar-based seasons. Instead of ecological cues, a secular trend
+in reproduction appears to be triggered by changes in the age at delivery of females, the absence of physiological constraints from maternal investment due to offspring loss, shorter interbirth interval, and a higher degree of coordination due to increasing population density ([Hernández-Pacheco et al 2016](https://onlinelibrary.wiley.com/doi/abs/10.1002/ajp.22502); Fig 1).
+
+<br>
+
+```{r,echo=FALSE,fig.asp=.3, fig.width = 10,fig.align='center',message=FALSE, fig.height=4, fig.cap="**Fig 1**. Cayo Santiago rhesus macaque adult female with newborn (left) and adult female with juvenile offspring (right). Photo by Raisa Hernández-Pacheco."}
+library(png)
+library(grid)
+img <- readPNG("cayo2.png")
+grid.raster(img)
+```
+
+<br>
+
+The Cayo Santiago rhesus macaque longitudinal demographic data on all individuals provides the unique opportunity to study the distribution of age at delivery and whether such distribution shows temporal changes with high precision. In this module, you will be using a subset of the Cayo Santiago rhesus macaque data of individuals born between birth seasons 2000 and 2005 (**cs_repro**; Table 1). This is authentic data collected through daily visual censuses performed by the staff of the Caribbean Primate Research Center (CPRC) of the University of Puerto Rico-Medical Sciences Campus.
+
+<p>
+
+Before coding, explore the data in Table 1.
+
+<br>
+
+**Table 1: Cayo Santiago female rhesus macaque reproductive data **
+<br>
+<style>
+body {
+text-align: justify}
+div.yellow { background-color:rgb(240,211,139); border-radius: 5px; padding: 20px;}
+</style>
+<div class = "yellow">
+
+```{r,message=FALSE,echo=FALSE}
+library(DT)
+library(tidyverse)
+cs <- read_csv("cs_cleanedFeb23.csv") 
+cs$dob <- as.Date(cs$dob)
+cs$dor <- as.Date(cs$dor)
+cs$dod <- as.Date(cs$dod)
+cs$mom_dob <- as.Date(cs$mom_dob)
+datatable(cs,rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T)) %>% 
+  formatStyle(columns = colnames(.$x$data), `font-size` = '13px')
+
+cs_repro <- cs
+```
+</div>
+
+**Metadata of cs_repro:** Reproductive data of female rhesus macaques giving birth between seasons 2000 and 2005 based on visual censuses. Shared by the CPRC and updated in February 1, 2023.
+  
+  + dob: date of birth
+  + season: annual birth season
+  + sex: f=female; m=male
+  + dor: date of removal from the population
+  + dod: date of death
+  + status: final fate of the individual
+  + mom_dob: mother's date of birth
+
+***
+
+<br>
+
+### 1. Exploring the structure of the dataset
+
+Before any analysis, you should check the data and understand its attributes. Refer to **Module M.1** for data structure exploration. **Code first before picking on the answer!**
+
+<br>
+
+**Guiding questions:**
+
+a) *What type of data is **cs_repro**?* 
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+```{r,eval=FALSE}
+# structure of cs_repro
+str(cs_repro)
+```
+**cs_repro** is of class spec_tbl_df, a subclass of data.frame.
+
+</details>
+
+<br>
+
+b) *How many variables and observations does **cs_repro** have?* 
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+**cs_repro** has 7 variables; "dob", "season", "sex", "dor", "dod", "status", "mom_dob".
+
+</details>
+
+<br>
+
+c) *What is the class of each variable in **cs_repro**? Can you differentiate them?* 
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+**cs_repro** has variables of class "Date", "numeric", and "character".
+
+</details>
+
+<br>
+
+### 2. Checking data quality and creating variables
+
+Put into practice some quality check. Explore whether you have full information on each variable. **Hint:** Besides the functions learned in **Module M.1**, try the function **is.na()** to check whether a particular row of a column is empty (i.e., =NA).
+
+<br>
+
+**Guiding questions:**
+
+a) *Is there full information on all variables? Explain.* 
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+No. Several variables have rows = NA. Remember, for **summary()** to work the variables should be factors, numbers, or Dates.
+
+</details>
+
+<br>
+
+<span style='color:#BC3C29FF; font-size:150%; font-weight:600'> Challenge! </span>
+
+1. Before plotting the data, remove individuals with missing information. **Hint:** You may use **ifesle()** and **is.na()** to create a new column with a binary variable indicating whether the individual has missing data or not. Then, you can use **filter()** within *tidyverse* to filter out individuals with missing data. 
+
+<br>
+
+2. Create a new variable for age at delivery. This is the age in which each mother had their offspring.
+
+<br>
+
+
+### 3. Plotting data with ggplot2
+
+To plot the data, you will use **R** package *ggplot2* and its function **ggplot()** to generate the graphs. The basic template for ggplots is **ggplot(data = yourdata, mapping = aes(mappings)) + geom_function() ** where *yourdata* is your data, *mappings* are the *x*-axis and *y*-axis variables, and *geom_function* is the graph type. 
+
+To have a preview of plots, click on “Plots” in the bottom right window of **RStudio**. 
+
+<br>
+
+#### **A. Displaying distributions**
+
+To explore the distribution of a numeric variable, you can use **frequency distributions**, which are the number of occurrences of each value in the data. For this, you will use **geom_histogram()**, to plot a histogram. As a refresher, histograms split the data values into intervals or *bins*, revealing the shape of the variable distribution.
+
+Below, you will plot the distribution of age at delivery.
+```{r,eval=FALSE}
+# installing ggplot2
+install.packages("ggplot2",repos="http://cran.us.r-project.org")
+
+# loading ggplot2
+library(ggplot2)
+
+# histogram of age at delivery
+p1 <- ggplot(cs_repro,aes(x=age_at_delivery)) + # histograms only plot a single variable
+  geom_histogram()
+
+p1
+```
+
+<br>
+
+**Guiding questions:**
+
+a) *Can you describe the distribution of age at delivery for birth cohorts between 2000 and 2005?*
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+The distribution of age at delivery seems right skewed. This means that most females gave birth at younger ages.
+
+</details>
+
+<br>
+
+Although the observed distribution of age at delivery for cohorts between 2000 and 2005 can be described based on **p1**, there are many features of the histogram you can improve for better visualization. Below, you will learn how to customize bin width, axes, and other plot aesthetics.
+```{r,eval=FALSE}
+# customizing bin width
+p2 <- ggplot(cs_repro,aes(x=age_at_delivery)) + 
+  geom_histogram(binwidth = 1) # bin width of 1 year
+
+p2
+
+# customizing axes tick marks
+p3 <- ggplot(cs_repro,aes(x=age_at_delivery)) + 
+  geom_histogram(binwidth = 1) +
+  scale_y_continuous("Frequency", limits = c(0,150), breaks = seq(0,150,20)) + # y axis title, tick mark range, tick mark sequence 
+  scale_x_continuous("Age at delivery (years)", limits = c(3,24), breaks = seq(3,24,4)) # x axis title, tick mark range, tick mark sequence 
+
+p3
+
+# customizing colors
+p4 <- ggplot(cs_repro,aes(x=age_at_delivery)) + 
+  geom_histogram(binwidth = 1, fill="skyblue",color="black") + # fill for bar color, color for border color
+  scale_y_continuous("Frequency", limits = c(0,150), breaks = seq(0,150,20)) + 
+  scale_x_continuous("Age at delivery (years)", limits = c(3,24), breaks = seq(3,24,4)) +
+  theme_classic(18) # white background, font size 18
+
+p4
+```
+
+<br>
+
+**Guiding questions:**
+
+a) *Can you describe the distribution of age at delivery for birth cohorts between 2000 and 2005 better now?*
+
+<br>
+
+Given that age at delivery is a continuous variable, you may want to  plot a curve. **ggplot2** also allows you to plot a smoothed version of the histogram (curve) using **geom_density()**. 
+```{r,eval=FALSE}
+# smoothed histogram  
+p5 <- ggplot(cs_repro,aes(x=age_at_delivery)) + 
+  geom_density(fill="skyblue",color="black") +
+  scale_x_continuous("Age at delivery (years)", limits = c(3,24), breaks = seq(3,24,4)) +
+  theme_classic(18) 
+
+p5
+```
+
+<br>
+
+#### **B. Displaying distributions across groups**
+
+By using **group=** within the mappings, you can plot data across groups. The variable to be used for groups needs to be arranged within a single column and be a factor. Below, you will plot the distribution of age at delivery across each birth season. Note that you can incorporate functions within ggplot functions.
+```{r,eval=FALSE}
+# plotting the distribution of age at delivery per season
+p6 <- ggplot(cs_repro,aes(x=age_at_delivery,color=as.factor(season))) + #'season' as a factor, color per level
+  geom_density() +
+  scale_x_continuous("Age at delivery (years)", limits = c(3,24), breaks = seq(3,24,4)) +
+  theme_classic(18) 
+
+p6
+
+# changing the legend title
+p7 <- p6 + guides(color = guide_legend(title = "Season"))
+
+p7
+
+# adding fill to each distribution
+p8 <- ggplot(cs_repro,aes(x=age_at_delivery,color=as.factor(season),fill=as.factor(season))) + 
+  geom_density(alpha=.3) +
+  scale_x_continuous("Age at delivery (years)", limits = c(3,24), breaks = seq(3,24,4)) +
+  theme_classic(18) +
+  guides(fill = guide_legend(title = "Season")) + # changing the fill color legend title
+  guides(color="none") # deleting the border color legend
+
+p8
+```
+
+<br>
+
+#### **C. Displaying means and errors**
+
+Using the functions learned in **Module M.2** for descriptive statistics within *tidyverse* and *rstatix*, below you will plot the mean age at delivery and its standard error across season using **geom_point** and **geom_errorbar()**. 
+```{r,eval=FALSE}
+# loading rstatix
+library(rstatix)
+
+# converting season to a factor
+cs_repro$season <- as.factor(cs_repro$season)
+
+# table for descriptive statistics
+sum <- cs_repro %>%
+  group_by(season) %>%
+  get_summary_stats(age_at_delivery)
+
+sum
+
+# plotting mean age at delivery across season
+p9 <- ggplot(sum,aes(season,mean)) +
+  geom_point(size=3) + #point size
+  geom_errorbar(aes(min=mean-se, max=mean+se), width=0.2) + #mean minus its standard error
+  theme_classic(18) +
+  scale_y_continuous("Mean age at delivery (years)",limits = c(9,11),breaks = seq(9,11,.2))
+
+p9
+```
+
+<br>
+
+Finally, when plotting data summaries, it is always good to think about whether including individual observations in the plot improves the visualization. You can do this by using **geom_jitter**.
+```{r,eval=FALSE}
+# adding individual observations from data frame cs_repro to p9
+p10 <- ggplot(sum,aes(season,mean)) +
+  geom_point(size=3) + #point size
+  geom_errorbar(aes(min=mean-se, max=mean+se), width=0.2) + #mean minus its standard error
+  theme_classic(18) +
+  geom_jitter(data=cs_repro,aes(x=season,y=age_at_delivery),size=1.2, width = 0.2) # width indicates the extend of the jitter
+ 
+p10
+
+# adding transparency with 'alpha'
+p11 <- ggplot(sum,aes(season,mean)) +
+  geom_point(size=3) + 
+  geom_errorbar(aes(min=mean-se, max=mean+se), width=0.2) + 
+  theme_classic(18) +
+  geom_jitter(data=cs_repro,aes(x=season,y=age_at_delivery),size=1.2, width = 0.2, alpha=.2) 
+ 
+p11
+
+# additional formatting below:
+p12 <- ggplot(sum,aes(season,mean)) +
+  geom_point(size=3) +
+  geom_errorbar(aes(min=mean-se, max=mean+se), width=0.2) + 
+  theme_classic(18) +
+  geom_jitter(data=cs_repro,aes(x=season,y=age_at_delivery,colour = season),size=1.2, width = 0.2, alpha=.2) +
+  theme(legend.position = "none")  # removing legend
+ 
+p12
+```
+
+<br>
+
+**Guiding questions:**
+
+a) *Can you explain the patterns in the individual data points per season?*
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+The data points seem to be clustered in each age class. This is expected because rhesus macaques present reproductive synchrony, thus birth cohorts are of similar age.
+
+</details>
+
+<br>
+
+You can follow similar steps to instead generate a bar graph using **geom_bar()**:
+```{r,eval=FALSE}
+p13 <- ggplot(sum,aes(season,mean)) +
+  geom_bar(stat = "Identity") + #identity to plot bars across groups
+  geom_errorbar(aes(min=mean-se, max=mean+se), width=0.2) +
+  theme_classic(18) +
+  scale_y_continuous("Mean age at delivery (years)") 
+
+p13
+```
+
+<br>
+
+#### **C. Figure panels and facetting functions**
+
+Laying out multiple plots on a page is another great feature of **R** and its package *gridExtra*. Below, you will learn how to generate a figure panel with **p8** and **p12**.
+
+First, you will identify each plot with the letters A and B using **annotate()**.
+```{r,eval=FALSE}
+# annotating plots with a letter
+p8 <- p8 +
+  annotate("text", x = 3, y = .12, label = "A", size=8) #x and y indiciate the coordinates in the plot
+
+p8
+
+p12 <- p12 +
+  annotate("text", x = .7, y = 24, label = "B", size=8)
+
+p12
+```
+
+<br>
+
+To create the panel, you will use the command **grid.arrange()** within **R** package *gridExtra*.
+```{r,eval=FALSE}
+# installing and loading gridExtra
+install.packages("gridExtra",repos="http://cran.us.r-project.org")
+
+# loading gridExtra
+library(gridExtra)
+
+# panel figure with 2 columns
+grid.arrange(p8,p12,ncol=2) # two columns
+
+# panel figure with 1 column
+grid.arrange(p8,p12,ncol=1) # two columns 1 column
+```
+
+<br>
+
+**ggplot2** also contains faceting functions for presenting data across groups. Below, you will use the function **facet_grid()** to add information about the sex of the offspring **p9**.
+```{r,eval=FALSE}
+# table for descriptive statistics of age at delivery across season and offspring sex
+sum2 <- cs_repro %>%
+  group_by(season,sex) %>%
+  get_summary_stats(age_at_delivery)
+
+sum2
+
+# facetting p9 by sex
+p14 <- ggplot(sum2,aes(season,mean)) +
+  geom_point(size=4) + #point size
+  geom_errorbar(aes(min=mean-se, max=mean+se), width=0.2) +
+  facet_grid(~sex) 
+
+p14
+```
+
+<br>
+
+<span style='color:#BC3C29FF; font-size:150%; font-weight:600'> Challenge! </span>
+
+1. Code for the following plots using **geom_boxplot()**:
+
+<br>
+
+```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=3.5,message=FALSE}
+# age at delivery
+cs_repro$age_at_delivery <- as.numeric((as.Date(cs_repro$dob)-as.Date(cs_repro$mom_dob))/365)
+
+ggplot(cs_repro,aes(as.factor(season),age_at_delivery,fill=as.factor(season))) +
+  geom_boxplot(alpha=.7) +
+  geom_jitter(size=1.2,alpha=0.2, width = 0.1, aes(colour = as.factor(season))) +
+  theme_classic(18) + 
+  scale_y_continuous("Age at delivery (years)", breaks = seq(0,25,5)) +
+  scale_x_discrete("Birth season") +
+  theme(legend.position = "none")
+```
+
+<br>
+
+```{r,echo=FALSE,fig.align='center',fig.width=6,fig.height=3.5,message=FALSE}
+library(tidyverse)
+cs_repro$dummy_sex <- ifelse(is.na(cs_repro$sex),0,1)
+
+cs_repro <- filter(cs_repro,dummy_sex==1)
+
+ggplot(cs_repro,aes(sex,age_at_delivery,fill=sex)) +
+  geom_boxplot(alpha=.7) +
+  geom_jitter(size=1.2,alpha=0.2, width = 0.2, aes(colour = sex)) +
+  facet_grid(~season) +
+  theme_classic(18) +
+  scale_y_continuous("Age at delivery (years)", breaks = seq(0,25,5)) +
+  scale_x_discrete("Sex") +
+  theme(legend.position = "none")
+```
+
+<br>
+
+**Question:**
+Do you observe temporal patters in age at delivery? Explain.
+
+<br>
+
+
+<center>
+**FIN**
+</center>
+<br>
+
+***
+
+**Acknowledgements:** The creation of this module was funded by the National Science Foundation DBI BRC-BIO award 2217812. Cayo Santiago is supported by the Office of Research Infrastructure Programs (ORIP) of the National Institutes of Health, grant 2 P40 OD012217, and the University of Puerto Rico (UPR), Medical Sciences Campus.
+```{r echo=FALSE,fig.asp=1,fig.width = 2,out.width="30%",fig.align='center',message=FALSE}
+library(png)
+library(grid)
+library(gridExtra)
+img1 <-  rasterGrob(as.raster(readPNG("nsflogo.png")), interpolate = FALSE)
+img2 <-  rasterGrob(as.raster(readPNG("cprclogo.png")), interpolate = FALSE)
+grid.arrange(img1, img2, ncol = 2)
+```
+
+***
+**Authors:** Raisa Hern&#225;ndez-Pacheco and Alexandra L Bland, California State University, Long Beach
+

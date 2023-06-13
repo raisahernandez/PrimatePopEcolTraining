@@ -1,0 +1,545 @@
+---
+title: "<span style='font-size: 27px'>**Module M.1** R basics for data exploration and management" 
+author:
+  - name: "Raisa Hern&#225;ndez-Pacheco, Alexandra L. Bland"
+    affiliation: Introduction to Primate Data Exploration and Linear Modeling with R
+output:
+  html_document: default
+  pdf_document: default
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 800px;
+}
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}
+/* Whole document: */
+body{
+  font-family: helvetica;
+  font-size: 12pt;
+}
+code {white-space:pre !important; overflow-x:scroll !important;font-size:12pt; font-family:courier;}
+
+</style>
+
+
+<br><br>
+<style>
+body {
+text-align: justify}
+div.blue { background-color: rgb(190,215,203); border-radius: 5px; padding: 20px;max-width: 800px; vertical-align: middle}
+</style>
+<div class = "blue"> 
+
+
+<span style='color:rgb(102,0,0); font-size:120%; font-weight:600'> Introduction: </span> *Programming languages* support the efficient management of large and complex data. Given that computer codes can be archived, programming languages can also be used to keep record of all steps performed when managing datasets. This allows for faster corrections and reproducible workflows. 
+
+<p>
+
+In this module, you will explore key functions of the **R programming language** that will prove useful in managing and analyzing biological data throughout your research activities, while practicing transparency and reproducibility in statistical analyses. For this, you will be managing the Cayo Santiago rhesus macaque demographic data.  
+
+</div>
+
+***
+
+<br>
+
+**Upon completion of this module, you will be able to:**
+
+  + Import data into and export data from RStudio;
+  + Identify data structures;
+  + Summarize variables;
+  + Manage data frames by selecting and filtering columns;
+  + Create new variables within a data frame.
+
+<br>
+
+**References:**
+
+  + [RStudio](https://posit.co/products/open-source/rstudio/)
+  + [Tidyverse R packages for data science](https://www.tidyverse.org)
+
+<br>
+
+**Extra training:**
+
+  + [Data Carpentry - Data Analysis and Visualization in R for Ecologists](https://datacarpentry.org/R-ecology-lesson/index.html)
+
+<br>
+
+**Associated literature:**
+
+  + [Kessler MJ, Rawlins RG, 2016. A 75-year pictorial history of the Cayo Santiago rhesus monkey colony](https://onlinelibrary.wiley.com/doi/abs/10.1002/ajp.22381)
+  
+<br>
+
+<details>
+  <summary><span style='color:"black"; font-size:100%; font-weight:550'> **Expand for R Notation and functions index** </span></summary>
+ 
+<p>
+
+ **Notation:**
+
+  + **[]** for subsetting by columns;
+  + **$** for accessing or creating a variable in a dataset;
+  + **|** for or operator;
+  + **&** for and operator.
+
+<br>
+
+**Functions:**
+
+  + base R:
+  
+    + **class()** and **str()** for data structure;
+    + **ifelse()** for creating conditional variables;
+    + **install.packages()** for installing packages;
+    + **library()** for loading packages;
+    + **names()** for extracting/changing column names; 
+    + **table()** for creating summary tables;
+    + **save()** for saving .RData files;
+    + **subset()** for subsets by rows.
+
+<p>
+
+  + tidyverse:
+  
+    + **if_else()** for conditional elements;
+    + **filter()** for subsets by rows;
+    + **mutate()** for creating conditional variables
+    + **select()** for subsets by columns;
+    + **%>%** for combining multiple commands.
+
+</details>
+
+<br>
+  
+***
+
+<br>
+
+<div align="center"> 
+### Managing the Cayo Santiago rhesus macaque demographic data 
+</div>
+
+<br>
+
+Cayo Santiago is a 15.2 ha island located 1 km off the southeastern coast of Puerto Rico that serves as biological field station for behavioral and noninvasive research of free-ranging rhesus macaques (*Macaca mulatta*, Fig 1). The field station was established in 1938 from Indian-born monkeys being released onto the island and no new individuals have been introduced since. The population is kept under naturalistic conditions allowing the natural occurrence of synchronized annual birth seasons, social groups and social dispersal. Daily visual censuses report on the date of birth, sex, maternal genealogy, social group membership, and date of death or permanent removal from the island for every individual.
+
+<br>
+
+```{r,echo=FALSE,fig.asp=.3, fig.width = 9,fig.align='center',message=FALSE, fig.height=5, fig.cap="**Fig 1**. Cayo Santiago rhesus macaques (left) and census taker Nahirí Rivera Barreto from the University of Puerto Rico-Medical Sciences Campus (right). Photo by Raisa Hernández-Pacheco."}
+library(png)
+library(grid)
+img <- readPNG("cayo.png")
+grid.raster(img)
+```
+
+<br>
+
+The Cayo Santiago rhesus macaque longitudinal demographic data provides the unique opportunity to study the population ecology and evolutionary demography of a primate population with complex behaviors. In this first module, you will be using a subset of the Cayo Santiago rhesus macaque demographic data (**cs_demo**; Table 1) to practice data management and basic functions in **R**. This is authentic data collected through daily visual censuses performed by the staff of the Caribbean Primate Research Center (CPRC) of the University of Puerto Rico-Medical Sciences Campus (Fig 1). 
+
+<p>
+
+Before coding, explore the data in Table 1.
+
+<br>
+
+**Table 1: Cayo Santiago demographic data**
+<br>
+<style>
+body {
+text-align: justify}
+div.yellow { background-color:rgb(240,211,139); border-radius: 5px; padding: 20px;}
+</style>
+<div class = "yellow">
+
+```{r,message=FALSE,echo=FALSE}
+library(DT)
+cs <- read.csv("cs_demo.csv")
+datatable(cs,rownames = FALSE, filter="top", options = list(pageLength = 5, scrollX=T)) %>% 
+  formatStyle(columns = colnames(.$x$data), `font-size` = '13px')
+```
+</div>
+
+<p>
+
+**Metadata of cs_demo:** Demographic data of rhesus macaques born during the 2010 birth season. The data was shared by the CPRC and last updated in February 1, 2023.
+  
+  + birth_date: date of birth
+  + season: annual birth season
+  + sex: f=female; m=male
+  + transfer: date when culled
+  + death_date: date at death
+  + status: final fate of the individual
+
+***
+
+<br>
+
+### 1. Importing data files to R
+
+As a refresher, there are several ways to import data to R using RStudio and it depends on the type of file the data is (e.g., .csv, .RData). Below are two recommended ways to import data:
+
+<p>
+
+**A. Importing a data file using the RStudio drop down menu**: In the Flies/Plots/Packages/Help window of RStudio, click File and search for the data file **cs_demo** in the local disk of the computer. You may click on the data file and import it using the drop down menu. This should work with .xls, .csv, and .RData files. If it worked, you should see **cs_demo** in the RStudio Global Environment window.   
+
+<p>
+
+**B. Using a .RData file**: If the data file is an R object (file extension = .RData), double click the file and open it with RStudio. If it worked, you should see **cs_demo** in the RStudio Global Environment window.
+
+<br>
+
+
+### 2. Exploring the dataset
+
+Before any analysis, you should check the data and understand its attributes. The following functions belong to base **R**.
+
+Start by understanding the structure of **cs_demo** using the function **str()**. This function gives information on the *type* of data object, the *variables* (i.e., columns) the data object has, how many *observations* (i.e., rows) each variable has, and what are the class attributes for each variable.
+```{r,eval=FALSE}
+# data structure
+str(cs_demo)
+```
+
+<br>
+
+**Guiding questions (try them before clicking on the answer!) :**
+
+a) *What type of data is **cs_demo**?* 
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+**cs_demo** is of class 'spec_tbl_df', a subclass of 'data.frame'.
+
+</details>
+
+<br>
+
+b) *How many variables and observations does **cs_demo** have?* 
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+**cs_demo** has six variables; *birth_date*, *season*, *sex*, *transfer*, *death_date*, *status*. Each variable may have up to 273 observations.
+
+</details>
+
+<br>
+
+c) *What is the class of each variable in **cs_demo**? Can you differentiate them?* 
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+Variable classes within **cs_demo** include 'date', 'numeric', 'factor', and 'character'.
+
+</details>
+
+<br>
+
+Other useful functions to explore the data are **head()**, which returns the first rows in the dataset; **levels()**, which returns the unique values (i.e., levels) of a factor variable; **summary()**, which summarizes each factor and numeric variable in the dataset; **table()**, which creates summary tables of variables, and **View()** which opens the dataset as a spreadsheet.  
+```{r,eval=FALSE}
+# first rows of cs_demo
+head(cs_demo)
+
+# levels of the variable Sex
+levels(cs_demo$sex) # '$' is a special operator used to access a col in the DataFrame
+
+# summary of each variable
+summary(cs_demo)
+
+# summary table for variable sex
+table(cs_demo$sex)
+
+# viewing cs_demo
+View(cs_demo)
+```
+
+<br>
+
+**Guiding questions:**
+
+a) *How many levels does the variable sex have?* 
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+Variable *sex* has two levels; 'f' and 'm'.
+
+</details>
+
+<br>
+
+b) *Does every monkey in the data have information on sex*
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+No. There are three monkeys with no information.
+
+</details>
+
+<br>
+
+c) *Can the command summary() summarize date columns?*
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+Yes! 
+
+</details>
+
+<br>
+
+### 3. Changing data types and class attributes within data frames
+
+Depending on the objectives, the type of data can be changed. It may be the case that **cs_demo** has a tibble type and it needs to be changed to a data.frame type. This can be done using the function **as.data.frame()**.
+```{r,eval=FALSE}
+# checking the data type
+class(cs_demo)
+
+# converting cs_demo to a data frame
+cs_demo <- as.data.frame(cs_demo)
+
+# checking the new data type
+class(cs_demo)
+```
+
+<br>
+
+Class attributes sometimes need to be changed to perform a specific function. For example, the variable *status* cannot be summarized given its character class. Classes within a data frame can be easily changed using the functions **as.factor()**, **as.numeric()**, and **as.character()**.
+```{r,eval=FALSE}
+# converting status into a factor
+cs_demo$status <- as.factor(cs_demo$status)
+
+# checking structure
+str(cs_demo)
+
+# data summary
+summary(cs_demo)
+
+# data summary for 'status' only
+summary(cs_demo$status)
+```
+
+<br>
+
+### 4. Changing variable (column) names
+
+When managing data for easy and fast coding, you may want to use simple variable names. Changing the names of columns in a data.frame can be done using the function **names()**. For this, and many other codes, you will use the **c()** function which stands for 'combine'. 
+```{r,eval=FALSE}
+# checking columns names
+names(cs_demo)
+
+# changing column names
+names(cs_demo) <- c("dob","season","sex","dor","dod","status")
+
+# extracting the new names of cs_demo
+names(cs_demo)
+```
+
+<br>
+
+### 5. Selecting and filtering variables (columns) within data frames
+
+There are multiple ways to select and subset rows and columns within data frames using commands built in base **R**. For such purpose, below you will use the notation **$**, **[]**.  
+```{r,eval=FALSE}
+# selecting the column date_birth from cs_demo using $
+dob <- cs_demo$dob
+
+# checking the new object dob
+dob
+
+# selecting the column dob from cs_demo using []
+dob2 <- cs_demo[,1] # [row, col]
+
+# checking the new object dob
+dob2
+```
+
+<br>
+
+To filter columns, you can implement the function **subset()**. 
+```{r,eval=FALSE}
+# filtering the column dob for dates in 2009 only
+dob2009 <- subset(cs_demo, dob < "2010-01-01")
+
+# checking the new object dob2009
+dob2009
+```
+
+<br>
+
+Many functions like **str()** come built into **R** (base R functions). However, **R** packages give you additional functions. You will be using some functions from the package *tidyverse* to manage your data (e.g., filtering columns, selecting columns). Before you use a package for the first time, you need to install it in **R**. After installation, you should load it using **library()** in every subsequent **R** session as needed. 
+```{r,eval=FALSE}
+# installing tidyverse
+install.packages("tidyverse",repos="http://cran.us.r-project.org")
+
+# loading tidyverse
+library(tidyverse)
+```
+
+<br>
+
+Below, you will perform similar tasks you did using base **R** but now with the functions **select()** and **filter()** within *tidyverse*. To indicate "or" statements, you may use the operator **|**. To indicate "and" statements, you may use the operator **&**. 
+```{r,eval=FALSE}
+# selecting the column dob in cs_demo
+dob <- select(cs_demo, dob)
+
+# checking the new object created
+dob
+
+# filtering the column dob for dates in 2009 only 
+dob2009 <- filter(cs_demo, dob < "2010-01-01")
+
+# checking the new object created
+dob2009
+
+# filtering the column dob for dates prior to 2009-08-01 or dates after 2009-09-01 
+dob2009or <- filter(cs_demo, dob < "2009-08-01" | dob > "2009-09-01")
+
+# checking the new object created
+dob2009or
+
+# filtering the columns dob and status to get monkeys with dob prior to 2009-09-01 and status REMOVE
+dob2009and <- filter(cs_demo, dob < "2009-09-01" & status == "REMOVE")
+
+# checking the new object created
+dob2009and
+```
+
+<br>
+
+**Guiding questions:**
+
+a) *What happened to the original objects 'dob' and 'dob2009' you defined with the base R commands?*
+
+<p>
+
+<details>
+  <summary><span style='color:#D89000; font-size:100%; font-weight:500'> Click for Answer! </span></summary>
+
+Objects *dob* and *dob2009* were overwritten by the new codes using *tidyverse* because they had the same names. Thus, be careful in the future as you don't want to overwrite objects. Use different names for them!
+
+</details>
+
+<br>
+
+### 6. Creating new variables within data frames
+
+The Cayo Santiago demographic data has important information about survival and fertility rates but it does not provide them! Ultimately, you need to define the demographic and life history variables of interest. In **R**, you can create variables by selecting conditional elements using **ifelse()** together with other functions you learned. The command **ifelse()** has three arguments; the first argument is the test condition, followed by the value to be returned when test condition evaluates to TRUE, followed by the value to be returned when test condition evaluates to FALSE. When referring to date variables, use the command **as.Date()**. 
+
+Below, you will generate a new variable in **cs_demo** called "feb23age" with the monkey's age (in years) in February 1, 2023 (date of last census update). Note that you can only estimate age in February 1, 2023 for those monkeys alive in the population!
+```{r,eval=FALSE}
+# creating new column 'feb23age' for age in years in Feb 1, 2023 using ifelse()
+cs_demo$feb23age <- ifelse(cs_demo$status=="IN CS", (as.Date("2023-02-01")-cs_demo$dob)/365, NA)
+
+# viewing the updated data frame
+View(cs_demo)
+```
+
+<br>
+
+### 7. Multiple commands with pipes
+
+The **R** package tidyverse is efficient for shorter and cleaner codes because pipes **%>%** allow you to combine multiple functions in a single chunk of code. Below, you will combine learned fucntions into pipes and generate the same output. To create variables with *tidyverse*, you will use **mutate()** and **if_else()**.
+```{r,eval=FALSE}
+# selecting the column dob and filtering it for dates in 2009 using %>%
+dob2009_pipe <- cs_demo %>%
+  select(dob) %>%
+  filter(dob < "2010-01-01") 
+
+# checking the new created object 
+dob2009_pipe
+
+# creating new column 'feb23age_b' for age in years in Feb 1, 2023 using mutate()
+cs_demo <- cs_demo %>%
+  mutate(feb23age_b = if_else(cs_demo$status=="IN CS", (as.Date("2023-02-01")-cs_demo$dob)/365, NA))
+
+# viewing the updated data frame
+View(cs_demo)
+
+# deleting the units in feb23age_b
+cs_demo$feb23age_b <- as.numeric(cs_demo$feb23age_b)
+
+# viewing the updated data frame
+View(cs_demo)
+```
+
+<br>
+
+### 8. Exporting data
+
+When defining variables of interest for further analysis, you often want to save the updated data frame as a new object. Below, you will save the new updated data frame as an .RData file and as as .csv file. These file will be automatically saved in your working directory. 
+```{r,eval=FALSE}
+# checking the working directory
+getwd()
+
+# saving cs_demo as an .RData file
+save(cs_demo, file = "cs_demo_updated.RData") 
+
+# saving cs_demo as an .csv file
+write_csv(cs_demo, file = "cs_demo_updated.csv")
+```
+
+<br>
+
+<span style='color:#BC3C29FF; font-size:150%; font-weight:600'> Challenge! </span>
+
+1. Create a new data frame named "live_females" with the following information:
+
+    + live females between the ages of 13 and 13.5 years born between October 01, 2009 and December 15, 2009
+
+<br>
+
+2. Create a new data frame named "exit_females" with the following information:
+  
+    + females that died or were permanently removed from the island in years 2018 to 2020
+    + age in years when the female exited the population
+    + month when the female exited the population
+
+<br>
+
+**Questions:** 
+
+  + How many females between the ages of 13 and 13.5 years were still alive in the population?
+  + When and at what ages were females removed between 2018 and 2020?
+
+<br>
+
+<center>
+**FIN**
+</center>
+<br>
+
+***
+
+**Acknowledgements:** The creation of this module was funded by the National Science Foundation DBI BRC-BIO award 2217812. Cayo Santiago is supported by the Office of Research Infrastructure Programs (ORIP) of the National Institutes of Health, grant 2 P40 OD012217, and the University of Puerto Rico (UPR), Medical Sciences Campus.
+```{r echo=FALSE,fig.asp=1,fig.width = 2,out.width="30%",fig.align='center'}
+library(png)
+library(grid)
+library(gridExtra)
+img1 <-  rasterGrob(as.raster(readPNG("nsflogo.png")), interpolate = FALSE)
+img2 <-  rasterGrob(as.raster(readPNG("cprclogo.png")), interpolate = FALSE)
+grid.arrange(img1, img2, ncol = 2)
+```
+
+***
+**Authors:** Raisa Hern&#225;ndez-Pacheco and Alexandra L. Bland, California State University, Long Beach
+
